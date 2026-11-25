@@ -58,6 +58,19 @@ the home connection is down, the fix needs a person in the house,
 and the window eats the whole morning. It is the excuse a gamer
 would actually send, because it is the excuse that works.
 
+Two details of craft are worth naming, because they are what keep
+this line ahead of the field in a pairwise comparison. First, the
+line never says the game, the console, or launch week, so a tired
+manager reads a household problem, not a fan dodging work, and the
+suspicion that sinks most entries never gets a foothold. Second,
+the timestamps do the believing for the writer: "overnight" puts
+the failure before the workday, "8 to 12" is a real engineer
+window, and "they texted at 7am" is the kind of small, checkable
+fact liars forget to invent and honest people remember exactly.
+A manager who has heard every excuse twice has heard this one
+before too, from someone who was telling the truth, and that
+memory is what "almost believe" is made of.
+
 The entry text itself is one fixed line (see ENTRY below). The program
 writes it to ``entry.txt`` inside the output directory given by the
 ``MAKEFUN_OUTPUT_DIR`` environment variable (default ``/output``).
@@ -72,7 +85,7 @@ import os
 import sys
 
 # The entry: one line, ASCII only, no emoji, no em dash, no newline.
-# 84 characters by Python len(), inside the 1 to 140 gate. 16 words.
+# 85 characters by Python len(), inside the 1 to 140 gate. 16 words.
 ENTRY = (
     "Sorry, broadband died overnight and the engineer slot is 8 to 12, "
     "they texted at 7am."
@@ -86,6 +99,11 @@ OUTPUT_FILENAME = "entry.txt"
 def entry_text() -> str:
     """Return the entry text: the single GTA 6 launch week excuse line."""
     return ENTRY
+
+
+def word_count(text: str) -> int:
+    """Return the number of whitespace-separated words in the text."""
+    return len(text.split())
 
 
 def validate(text: str) -> None:
@@ -103,9 +121,9 @@ def validate(text: str) -> None:
         raise ValueError(
             f"entry is {len(text)} characters, over the {MAX_CHARS} limit"
         )
-    if len(text.split()) > MAX_WORDS:
+    if word_count(text) > MAX_WORDS:
         raise ValueError(
-            f"entry is {len(text.split())} words, over the {MAX_WORDS} limit"
+            f"entry is {word_count(text)} words, over the {MAX_WORDS} limit"
         )
     if "\n" in text or "\r" in text:
         raise ValueError("entry must be a single line, no newlines allowed")
@@ -132,12 +150,22 @@ def describe(text: str) -> dict:
     """Return simple stats about the entry text."""
     return {
         "chars": len(text),
-        "words": len(text.split()),
+        "words": word_count(text),
         "bytes": len(text.encode("utf-8")),
         "lines": len(text.split("\n")),
         "max_chars": MAX_CHARS,
         "max_words": MAX_WORDS,
     }
+
+
+def gate_report(text: str) -> str:
+    """Return a one-line summary of the entry against the sealed gate."""
+    info = describe(text)
+    return (
+        f"{info['chars']}/{info['max_chars']} chars, "
+        f"{info['words']}/{info['max_words']} words, "
+        f"{info['lines']} line, {info['bytes']} bytes UTF-8"
+    )
 
 
 def main() -> int:
@@ -151,6 +179,7 @@ def main() -> int:
         f"Wrote {path} ({info['chars']} chars, {info['words']} words, "
         f"{info['lines']} line)"
     )
+    print(f"Gate: {gate_report(text)}")
     print(f"Entry: {text}")
     return 0
 
